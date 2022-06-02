@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 2138677392}
-  m_IndirectSpecularColor: {r: 0.03470887, g: 0.35762548, b: 1.0107106, a: 1}
+  m_IndirectSpecularColor: {r: 0.03468909, g: 0.3575998, b: 1.0107324, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1317,6 +1317,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1072361960}
+  - component: {fileID: 1072361961}
   m_Layer: 0
   m_Name: World
   m_TagString: Untagged
@@ -1349,6 +1350,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1072361961
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1072361959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e567849054d0a93498411fb3993980bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  centerObject: {fileID: 206124703}
+  offset: {x: 0, y: -0.15, z: -0.39}
+  distanceFromCenter: 25
+  spinSpeed: 0
+  spinDir: -0.05
 --- !u!1001 &1308563968
 PrefabInstance:
   m_ObjectHideFlags: 0
