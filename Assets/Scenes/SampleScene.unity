@@ -1295,7 +1295,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e567849054d0a93498411fb3993980bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  centerObject: {fileID: 206124703}
+  centerObject: {fileID: 73949854}
   offset: {x: 0, y: -0.15, z: -0.39}
   distanceFromCenter: 25
   spinSpeed: 0
