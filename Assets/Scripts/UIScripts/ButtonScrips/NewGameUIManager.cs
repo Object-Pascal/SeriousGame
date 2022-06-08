@@ -60,4 +60,10 @@ public class NewGameUIManager : MonoBehaviour
         amountOfTurnsValue = (int)amountOfTurnsSlider.value;
         ChangeAmountOfTurnsCounter(amountOfTurnsValue);
     }
+
+    public void GetNewGameInfo()
+    {
+        Debug.Log($"Game name: {gameNameString}" +
+                $"\namount of turns: {amountOfTurnsValue}");
+    }
 }
