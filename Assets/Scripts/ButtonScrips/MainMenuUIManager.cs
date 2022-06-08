@@ -1,18 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class MainMenuUIManager : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public TextMeshProUGUI subtitle;
+    public TextMeshProUGUI startGame;
+
+    public void ChangeSubtitleText(string text)
     {
-        
+        subtitle.text = text;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void ChangeStartGameText(string text)
     {
-        
+        startGame.text = text;
     }
 }
