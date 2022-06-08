@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class NewGameUIManager : MonoBehaviour
 {
@@ -13,8 +14,10 @@ public class NewGameUIManager : MonoBehaviour
 
     public TextMeshProUGUI amountOfTurnsText;
     public TextMeshProUGUI amountOfTurnsCounter;
+    public Slider amountOfTurnsSlider;
 
     private string gameNameString;
+    private int amountOfTurnsValue;
 
     public void ChangeHeaderText(string text)
     {
@@ -41,8 +44,14 @@ public class NewGameUIManager : MonoBehaviour
         amountOfTurnsText.text = text;
     }
 
-    public void ChangeAmountOfTurnsCounter(int number)
+    public void ChangeAmountOfTurnsCounter(int value)
     {
-        amountOfTurnsCounter.text = $"{number}";
+        amountOfTurnsCounter.text = $"{value}";
+    }
+
+    public void GetAmountOfTurnsValue()
+    {
+        amountOfTurnsValue = (int)amountOfTurnsSlider.value;
+        ChangeAmountOfTurnsCounter(amountOfTurnsValue);
     }
 }
