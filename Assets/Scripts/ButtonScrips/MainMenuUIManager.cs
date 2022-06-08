@@ -10,6 +10,7 @@ public class MainMenuUIManager : MonoBehaviour
     public TextMeshProUGUI joinGame;
     public TextMeshProUGUI exitGame;
     public TextMeshProUGUI descripionHeader;
+    public TextMeshProUGUI description;
 
     public void ChangeSubtitleText(string text)
     {
@@ -34,5 +35,10 @@ public class MainMenuUIManager : MonoBehaviour
     public void ChangeDescriptionHeaderText(string text)
     {
         descripionHeader.text = text;
+    }
+
+    public void ChangeDescriptionText(string text)
+    {
+        description.text = text;
     }
 }
