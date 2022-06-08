@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class NewGameUIManager : MonoBehaviour
 {
     public TextMeshProUGUI header;
+    public TextMeshProUGUI start;
 
     public TextMeshProUGUI gameName;
     public TextMeshProUGUI gameNamePlaceholder;
@@ -22,6 +23,11 @@ public class NewGameUIManager : MonoBehaviour
     public void ChangeHeaderText(string text)
     {
         header.text = text;
+    }
+
+    public void ChangeStartText(string text)
+    {
+        start.text = text;
     }
 
     public void ChangeGameNameText(string text)
