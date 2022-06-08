@@ -6,9 +6,13 @@ using UnityEngine;
 public class NewGameUIManager : MonoBehaviour
 {
     public TextMeshProUGUI header;
+
     public TextMeshProUGUI gameName;
     public TextMeshProUGUI gameNamePlaceholder;
     public TextMeshProUGUI gameNameInput;
+
+    public TextMeshProUGUI amountOfTurnsText;
+    public TextMeshProUGUI amountOfTurnsCounter;
 
     private string gameNameString;
 
@@ -30,5 +34,15 @@ public class NewGameUIManager : MonoBehaviour
     public void GetGameNameInputText()
     {
         gameNameString = gameNameInput.text;
+    }
+
+    public void ChangeAmountOfTurnsText(string text)
+    {
+        amountOfTurnsText.text = text;
+    }
+
+    public void ChangeAmountOfTurnsCounter(int number)
+    {
+        amountOfTurnsCounter.text = $"{number}";
     }
 }
