@@ -9,6 +9,7 @@ public class PauseUIManager : MonoBehaviour
     public TextMeshProUGUI header;
 
     public TextMeshProUGUI resume;
+    public TextMeshProUGUI settings;
 
     public void ChangeHeaderText(string text)
     {
@@ -18,5 +19,10 @@ public class PauseUIManager : MonoBehaviour
     public void ChangeResumeText(string text)
     {
         resume.text = text;
+    }
+
+    public void ChangeSettingsText(string text)
+    {
+        settings.text = text;
     }
 }
