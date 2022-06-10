@@ -1,18 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
-public class JoinGameUIManager1 : MonoBehaviour
+public class RoleSelectUIManager : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public TextMeshProUGUI header;
 
-    // Update is called once per frame
-    void Update()
+    public void ChangeHeaderText(string text)
     {
-        
+        header.text = text;
     }
 }
