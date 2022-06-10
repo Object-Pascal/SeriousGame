@@ -15,4 +15,14 @@ public class SceneChanger : MonoBehaviour
     {
         SceneManager.LoadScene("JoinGameScene");
     }
+
+    public void HomeScene()
+    {
+        SceneManager.LoadScene("HomeScene");
+    }
+
+    public void RoleSelectScene()
+    {
+        SceneManager.LoadScene("RoleSelectScene");
+    }
 }
