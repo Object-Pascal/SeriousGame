@@ -9,7 +9,10 @@ public class RoleSelectUIManager : MonoBehaviour
     public TextMeshProUGUI header;
 
     public TextMeshProUGUI customer;
-    public Button customerButton; 
+    public Button customerButton;
+
+    public TextMeshProUGUI retailer;
+    public Button retailerButton;
 
     public void ChangeHeaderText(string text)
     {
@@ -24,6 +27,16 @@ public class RoleSelectUIManager : MonoBehaviour
     public void DisableCustomer()
     {
         customerButton.gameObject.SetActive(false);
+    }
+
+    public void ChangeRetailerText(string text)
+    {
+        retailer.text = text;
+    }
+
+    public void DisableRetailer()
+    {
+        retailerButton.gameObject.SetActive(false);
     }
 
     public void SelectRole(string role)
