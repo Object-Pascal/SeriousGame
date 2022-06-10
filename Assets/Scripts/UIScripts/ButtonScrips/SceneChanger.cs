@@ -25,4 +25,9 @@ public class SceneChanger : MonoBehaviour
     {
         SceneManager.LoadScene("RoleSelectScene");
     }
+
+    public void PauseScene()
+    {
+        SceneManager.LoadScene("PauseScene");
+    }
 }
