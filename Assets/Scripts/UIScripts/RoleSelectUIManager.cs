@@ -17,6 +17,9 @@ public class RoleSelectUIManager : MonoBehaviour
     public TextMeshProUGUI distributor;
     public Button distributorButton;
 
+    public TextMeshProUGUI wholesaler;
+    public Button wholesalerButton;
+
     public void ChangeHeaderText(string text)
     {
         header.text = text;
@@ -50,6 +53,16 @@ public class RoleSelectUIManager : MonoBehaviour
     public void DisableDistributor()
     {
         distributorButton.gameObject.SetActive(false);
+    }
+
+    public void ChangeWholesalerText(string text)
+    {
+        wholesaler.text = text;
+    }
+
+    public void DisableWholesaler()
+    {
+        wholesalerButton.gameObject.SetActive(false);
     }
 
     public void SelectRole(string role)
