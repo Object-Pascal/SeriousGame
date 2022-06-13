@@ -30,4 +30,9 @@ public class SceneChanger : MonoBehaviour
     {
         SceneManager.LoadScene("PauseScene");
     }
+
+    public void SettingsScene()
+    {
+        SceneManager.LoadScene("SettingsScene");
+    }
 }
