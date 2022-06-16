@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -6,6 +7,7 @@ using UnityEngine.UI;
 
 public class RoleSelectUIManager : MonoBehaviour
 {
+    [SerializeField] private GameController gameController;
     public TextMeshProUGUI header;
 
     public TextMeshProUGUI customer;
@@ -80,6 +82,9 @@ public class RoleSelectUIManager : MonoBehaviour
 
     public void SelectRole(string role)
     {
-        Debug.Log($"{role} Selected");
+        SupplierRole roleSelected = Enum.Parse<SupplierRole>(role);
+        gameController.SelectClientRole(roleSelected);
+        gameController.SetGameUIActive(true);
+        gameObject.SetActive(false);
     }
 }
