@@ -5,14 +5,18 @@ using UnityEngine.Networking;
 using SocketIOClient;
 using System;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 public class GameController : MonoBehaviour
 {
     [SerializeField] private Room room;
-    [SerializeField] private GameUI gameUI;
+    [SerializeField] private RoomUI gameUI;
     [SerializeField] private RoleSelectUIManager roleSelectionUI;
     private Supplier[] suppliers;
-    private SocketIOUnity socket;
+    private IRoomDAO roomDao;
+
+    public delegate void DelRoomConnection(Room room);
+    public event DelRoomConnection OnRoomConnectionSuccess;
 
     private void Awake()
     {
@@ -23,6 +27,8 @@ public class GameController : MonoBehaviour
         {
             suppliers[i].SetRoom(room);
         }
+
+        roomDao = new HttpRoomDAO();
     }
 
     private void Start()
@@ -30,64 +36,65 @@ public class GameController : MonoBehaviour
         TryJoinRoom();
     }
 
-    private void TryJoinRoom()
+    private async Task<Room[]> GetAvailableRooms()
     {
-        var uri = new Uri(@"https://seahorse-app-artn4.ondigitalocean.app/?roomUri=2942d066-596d-4325-97d5-e9dede90357a");
-        socket = new SocketIOUnity(uri, new SocketIOOptions
-        {
-            Query = new Dictionary<string, string>
-                {
-                    { "roomUri", "2942d066-596d-4325-97d5-e9dede90357a" }
-                }
-            ,
-            EIO = 4
-            ,
-            Transport = SocketIOClient.Transport.TransportProtocol.WebSocket
-        });
-
-        Debug.Log(socket.ServerUri);
-
-        socket.OnConnected += Socket_OnConnected;
-        socket.OnError += Socket_OnError1;
-        //socket.On("error", Socket_OnError);
-
-        socket.OnUnityThread("error", (response) =>
-        {
-            Debug.Log("Error3: " + response.ToString());
-        });
-
-        socket.Connect();
+        return await roomDao.GetRoomsAvailable();
     }
 
-    private void Socket_OnError1(object sender, string e)
+    private async void TryJoinRoom()
     {
-        Debug.Log("Error2: " + sender.ToString());
-    }
+        Room[] roomsAvailable = await GetAvailableRooms();
 
-    private void Socket_OnError(SocketIOResponse obj)
-    {
-        Debug.Log("Error: " + obj.ToString());
-    }
-
-    private void Socket_OnConnected(object sender, EventArgs e)
-    {
-        Debug.Log("Connected socket");
-        Debug.Log("1");
-        Debug.Log("2");
-
-        UnityThread.executeInUpdate(() => 
+        if (roomsAvailable.Length == 0)
         {
-            room.Initialize(socket);
-            roleSelectionUI.gameObject.SetActive(true);
-        });
+            Debug.Log("No rooms available");
+            return;
+        }
 
-        Debug.Log("3");
-        Debug.Log("test");
+        Room roomToConnectTo = roomsAvailable[0];
+
+        IRoomConnection roomConnection = new SocketIORoomConnection(roomToConnectTo);
+
+        roomConnection.OnRoomConnectionSuccess += RoomConnection_OnRoomConnectionSuccess;
+        roomConnection.OnRoomConnectionFail += RoomConnection_OnRoomConnectionError;
+        roomConnection.OnError += RoomConnection_OnError;
+
+        roomConnection.ConnectToRoom(roomToConnectTo);
+    }
+
+    private void RoomConnection_OnRoomConnectionSuccess(Room room, IRoomConnection connection)
+    {
+        UnityThread.executeInUpdate(() =>
+        {
+            connection.OnRoomConnectionSuccess -= RoomConnection_OnRoomConnectionSuccess;
+            connection.OnRoomConnectionFail -= RoomConnection_OnRoomConnectionError;
+
+            Debug.Log("Connection success to: " + room.Id);
+            room.SetConnection(connection);
+            OnRoomConnectionSuccess?.Invoke(room);
+        });
+    }
+
+    private void RoomConnection_OnRoomConnectionError(Room room, IRoomConnection connection)
+    {
+        UnityThread.executeInUpdate(() =>
+        {
+            connection.OnRoomConnectionSuccess -= RoomConnection_OnRoomConnectionSuccess;
+            connection.OnRoomConnectionFail -= RoomConnection_OnRoomConnectionError;
+            connection.OnError -= RoomConnection_OnError;
+
+            Debug.Log("Connected fail to: " + room.Id);
+        });
+    }
+
+    private void RoomConnection_OnError(string message)
+    {
+        Debug.Log(message);
     }
 
     public void SelectClientRole(SupplierRole role)
     {
-        room.SetClientRole(role);
+        room.SelectRole(role);
     }
 
     public Supplier GetSupplier(SupplierRole role)

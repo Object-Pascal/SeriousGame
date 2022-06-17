@@ -3,78 +3,67 @@ using System.Collections.Generic;
 using UnityEngine;
 using SocketIOClient;
 
-public class Room : MonoBehaviour
+public class Room
 {
-    [SerializeField] private GameController gameController;
-    [SerializeField] private bool isSinglePlayer;
-    private Supplier[] suppliers;
-
-    private MultiplayerController multiplayerController;
+    [SerializeField] private RoomUI roomUI;
     private SupplierRole roleClient;
+    private IRoomConnection roomConnection;
 
-    public delegate void DelSetRole(SupplierRole role);
-    public event DelSetRole OnSetRole;
+    public delegate void DelRole(string message);
+    public event DelRole OnRoleAssigned;
+    public event DelRole OnRoleAssignOk;
+    public event DelRole OnRoleAssignFail;
 
-    public delegate void DelAdvanceRound(int roundNumber);
-    public event DelAdvanceRound OnAdvanceRound;
-
-    private void Awake()
+    public void SetConnection(IRoomConnection roomConnection)
     {
-        multiplayerController = GetComponent<MultiplayerController>();
+        this.roomConnection = roomConnection;
+        SubscribeToEvents();
     }
 
-    public void Initialize(SocketIOUnity socket)
+    private void SubscribeToEvents()
     {
-        multiplayerController.Initialize(socket);
+        roomConnection.OnRoleAssigned += RoomConnection_OnRoleAssigned;
+        roomConnection.OnRoleAssignOK += RoomConnection_OnRoleAssignOK;
+        roomConnection.OnRoleAssignFail += RoomConnection_OnRoleAssignFail;
+    }
+
+    private void RoomConnection_OnRoleAssignOK(string message)
+    {
+        roomConnection.OnRoleAssigned -= RoomConnection_OnRoleAssigned;
+        roomConnection.OnRoleAssignOK -= RoomConnection_OnRoleAssignOK;
+        roomConnection.OnRoleAssignFail -= RoomConnection_OnRoleAssignFail;
+
+        OnRoleAssignOk?.Invoke(message);
+    }
+
+    private void RoomConnection_OnRoleAssignFail(string message)
+    {
+        OnRoleAssignFail?.Invoke(message);
+    }
+
+    private void RoomConnection_OnRoleAssigned(string message)
+    {
+        OnRoleAssigned?.Invoke(message);
+    }
+
+    public void SelectRole(SupplierRole role)
+    {
+        roomConnection.SelectRole(role);
     }
 
     public void MakeOrder(Supplier supplier, int amount, OrderType orderType)
     {
-        multiplayerController.MakeOrder(new Order(supplier, amount, orderType));
+        //multiplayerController.MakeOrder(new Order(supplier, amount, orderType));
     }
 
     public void AdvanceRound(List<Order> orders, int roundCurrent)
     {
-        GiveOrdersToSuppliers(orders);
-        OnAdvanceRound?.Invoke(roundCurrent);
-    }
-
-    private void GiveOrdersToSuppliers(List<Order> orders)
-    {
-        Supplier[] suppliers = gameController.Suppliers;
-
-        for (int i = 0; i < orders.Count; i++)
-        {
-            for (int i2 = 0; i2 < suppliers.Length; i2++)
-            {
-                if (orders[i].Supplier == suppliers[i2])
-                {
-                    suppliers[i2].ReceiveOrder(orders[i]);
-                }
-            }
-        }
-    }
-
-    public void SetClientRole(SupplierRole role)
-    {
-        roleClient = role;
-        multiplayerController.SelectRole(role);
+        
     }
 
     public SupplierRole RolePlayer { get { return roleClient; } }
 
-    public Supplier SupplierPlayer 
-    { 
-        get 
-        {
-            return gameController.GetSupplier(RolePlayer);
-        } 
-    }
-    public Supplier[] Suppliers
-    {
-        get
-        {
-            return gameController.Suppliers;
-        }
-    }
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public string Uri { get; set; }
 }
