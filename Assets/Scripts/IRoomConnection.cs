@@ -14,11 +14,21 @@ public interface IRoomConnection
     public event DelRoleAssign OnRoleAssignFail;
     public event DelRoleAssign OnRoleAssigned;
 
+    public delegate void DelGame();
+    public event DelGame OnGameStarted;
+    public event DelGame OnGameNext;
+
+    public delegate void DelOrderMade(Order order);
+    public event DelOrderMade OnOrderMade;
+    public event DelOrderMade OnOrderOK;
+    public event DelOrderMade OnOrderFail;
+
     public delegate void DelError(string message);
     public event DelError OnError;
 
     public void ConnectToRoom(Room room);
     public void SelectRole(SupplierRole role);
-    public Task<bool> MakeOrder(Order order);
+    public void MakeOrder(Order order);
     public void DisconnectFromRoom();
+    public void ForceStartGame();
 }

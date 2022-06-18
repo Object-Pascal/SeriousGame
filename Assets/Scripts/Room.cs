@@ -14,6 +14,14 @@ public class Room
     public event DelRole OnRoleAssignOk;
     public event DelRole OnRoleAssignFail;
 
+    public delegate void DelGameStarted();
+    public event DelGameStarted OnGameStarted;
+    public event DelGameStarted OnGameNext;
+
+    public delegate void DelOrder(Order order);
+    public event DelOrder OnOrderOK;
+    public event DelOrder OnOrderFail;
+
     public void SetConnection(IRoomConnection roomConnection)
     {
         this.roomConnection = roomConnection;
@@ -25,6 +33,25 @@ public class Room
         roomConnection.OnRoleAssigned += RoomConnection_OnRoleAssigned;
         roomConnection.OnRoleAssignOK += RoomConnection_OnRoleAssignOK;
         roomConnection.OnRoleAssignFail += RoomConnection_OnRoleAssignFail;
+        roomConnection.OnGameStarted += RoomConnection_OnGameStarted;
+        roomConnection.OnGameNext += RoomConnection_OnGameNext; ;
+        roomConnection.OnOrderOK += RoomConnection_OnOrderOK;
+        roomConnection.OnOrderFail += RoomConnection_OnOrderFail;
+    }
+
+    private void RoomConnection_OnGameNext()
+    {
+        OnGameNext?.Invoke();
+    }
+
+    private void RoomConnection_OnOrderOK(Order order)
+    {
+        OnOrderOK?.Invoke(order);
+    }
+
+    private void RoomConnection_OnOrderFail(Order order)
+    {
+        OnOrderFail?.Invoke(order);
     }
 
     private void RoomConnection_OnRoleAssignOK(string message)
@@ -46,6 +73,11 @@ public class Room
         OnRoleAssigned?.Invoke(message);
     }
 
+    private void RoomConnection_OnGameStarted()
+    {
+        OnGameStarted?.Invoke();
+    }
+
     public void SelectRole(SupplierRole role)
     {
         roomConnection.SelectRole(role);
@@ -53,12 +85,17 @@ public class Room
 
     public void MakeOrder(Supplier supplier, int amount, OrderType orderType)
     {
-        //multiplayerController.MakeOrder(new Order(supplier, amount, orderType));
+        roomConnection.MakeOrder(new Order(supplier, amount, orderType));
     }
 
     public void AdvanceRound(List<Order> orders, int roundCurrent)
     {
         
+    }
+
+    public void ForceStartGame()
+    {
+        roomConnection.ForceStartGame();
     }
 
     public SupplierRole RolePlayer { get { return roleClient; } }

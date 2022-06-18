@@ -12,9 +12,12 @@ public class RoomUI : MonoBehaviour
     [SerializeField] private TMP_Text txtRound;
     [SerializeField] private TMP_Text txtIncomingValue;
     [SerializeField] private TMP_InputField inputOutgoingValue;
+    [SerializeField] private Button btnSendOrder;
     [SerializeField] private TMP_Text txtStock;
     [SerializeField] private TMP_Text txtBacklog;
     [SerializeField] private GameObject roleSelectionObj;
+    [SerializeField] private GameObject waitForPlayersObj;
+    [SerializeField] private GameObject hudObj;
     private Button[] btnsRoleSelect;
     private Room room;
 
@@ -30,8 +33,36 @@ public class RoomUI : MonoBehaviour
         room.OnRoleAssigned += Room_OnRoleAssigned;
         room.OnRoleAssignOk += Room_OnRoleAssignOk;
         room.OnRoleAssignFail += Room_OnRoleAssignFail;
+        room.OnGameStarted += Room_OnGameStarted;
+        room.OnGameNext += Room_OnGameNext;
+        room.OnOrderOK += Room_OnOrderOK;
+        room.OnOrderFail += Room_OnOrderFail;
         roleSelectionObj.SetActive(true);
         DisableTakenRoles();
+    }
+
+    private void Room_OnGameNext()
+    {
+        Debug.Log("game next");
+    }
+
+    private void Room_OnOrderOK(Order order)
+    {
+        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "SENT!";
+    }
+
+    private void Room_OnOrderFail(Order order)
+    {
+        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
+        btnSendOrder.interactable = true;
+    }
+
+    private void Room_OnGameStarted()
+    {
+        roleSelectionObj.SetActive(false);
+        waitForPlayersObj.SetActive(false);
+        hudObj.SetActive(true);
+        UpdateHud();
     }
 
     private void Room_OnRoleAssigned(string message)
@@ -53,6 +84,7 @@ public class RoomUI : MonoBehaviour
     {
         Debug.Log("Role assign ok");
         roleSelectionObj.SetActive(false);
+        waitForPlayersObj.SetActive(true);
     }
 
     private void Room_OnRoleAssignFail(string message)
@@ -60,10 +92,16 @@ public class RoomUI : MonoBehaviour
         Debug.Log("Role assign fail: " + message);
     }
 
+    private void UpdateHud()
+    {
+        UpdateStockAndBacklogAndRoundText();
+    }
+
     private void UpdateStockAndBacklogAndRoundText()
     {
-        //txtStock.text = "Stock: " + room.SupplierPlayer.Stock.ToString();
-        //txtBacklog.text = "Backlog: " + room.SupplierPlayer.BackLog.ToString();
+        Supplier supplierPlayer = GetSupplierPlayer();
+        txtStock.text = "Stock: " + supplierPlayer.Stock.ToString();
+        txtBacklog.text = "Backlog: " + supplierPlayer.BackLog.ToString();
     }
 
     private void UpdateRoundText(int round)
@@ -73,7 +111,10 @@ public class RoomUI : MonoBehaviour
 
     public void MakePlayerOrder()
     {
-        //room.MakeOrder(room.SupplierPlayer.SupplierRight, int.Parse(inputOutgoingValue.text), OrderType.Request);
+        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Sending...";
+        btnSendOrder.interactable = false;
+        Supplier supplierPlayer = GetSupplierPlayer();
+        room.MakeOrder(supplierPlayer.SupplierRight, int.Parse(inputOutgoingValue.text), OrderType.Request);
     }
 
     public void SelectRole(string role)
@@ -111,9 +152,22 @@ public class RoomUI : MonoBehaviour
                 }
                 catch
                 {
-                    Debug.Log("Error; cant parse button role to enum");
+                    Debug.Log("Error; cant parse button role to enum: " + txt);
                 }
             }
         }
+    }
+
+    public void ForceStartGame()
+    {
+        UnityThread.executeInUpdate(() =>
+        {
+            room.ForceStartGame();
+        });
+    }
+
+    private Supplier GetSupplierPlayer()
+    {
+        return gameController.GetSupplier(room.RolePlayer); ;
     }
 }

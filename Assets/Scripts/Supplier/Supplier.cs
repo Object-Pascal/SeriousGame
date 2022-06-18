@@ -4,6 +4,7 @@ using UnityEngine;
 
 public enum SupplierRole
 {
+    Customer,
     Retailer,
     WholeSaler,
     Distributor,
