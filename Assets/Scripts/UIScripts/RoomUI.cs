@@ -34,30 +34,41 @@ public class RoomUI : MonoBehaviour
         room.OnRoleAssignOk += Room_OnRoleAssignOk;
         room.OnRoleAssignFail += Room_OnRoleAssignFail;
         room.OnGameStarted += Room_OnGameStarted;
-        room.OnGameNext += Room_OnGameNext;
+        room.OnOrderReceived += Room_OnOrderReceived;
         room.OnOrderOK += Room_OnOrderOK;
         room.OnOrderFail += Room_OnOrderFail;
         roleSelectionObj.SetActive(true);
         DisableTakenRoles();
     }
 
-    private void Room_OnGameNext()
+    private void Room_OnOrderReceived(int roundCurrent, int amount, OrderType orderType)
     {
-        Debug.Log("game next");
+        UnityThread.executeInUpdate(() =>
+        {
+            UpdateStockAndBacklogAndRoundText();
+            UpdateRoundText(roundCurrent);
+            btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
+            btnSendOrder.interactable = true;
+        });
     }
 
-    private void Room_OnOrderOK(Order order)
+    private void Room_OnOrderOK(int amount, SupplierRole role, OrderType orderType)
     {
-        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "SENT!";
+        UnityThread.executeInUpdate(() =>
+        {
+            Debug.Log("RoomUI: OK");
+            btnSendOrder.GetComponentInChildren<TMP_Text>().text = "SENT!";
+            UpdateStockAndBacklogAndRoundText();
+        });
     }
 
-    private void Room_OnOrderFail(Order order)
+    private void Room_OnOrderFail()
     {
         btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
         btnSendOrder.interactable = true;
     }
 
-    private void Room_OnGameStarted()
+    private void Room_OnGameStarted(string message)
     {
         roleSelectionObj.SetActive(false);
         waitForPlayersObj.SetActive(false);
@@ -114,7 +125,7 @@ public class RoomUI : MonoBehaviour
         btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Sending...";
         btnSendOrder.interactable = false;
         Supplier supplierPlayer = GetSupplierPlayer();
-        room.MakeOrder(supplierPlayer.SupplierRight, int.Parse(inputOutgoingValue.text), OrderType.Request);
+        supplierPlayer.MakeOrder(int.Parse(inputOutgoingValue.text), OrderType.Request, true);
     }
 
     public void SelectRole(string role)
@@ -143,8 +154,6 @@ public class RoomUI : MonoBehaviour
                 {
                     SupplierRole role = Enum.Parse<SupplierRole>(txt);
 
-                    Debug.Log(txt + ":" + role.ToString());
-
                     if (role == roles[i2])
                     {
                         btnsRoleSelect[i].interactable = false;
@@ -168,6 +177,6 @@ public class RoomUI : MonoBehaviour
 
     private Supplier GetSupplierPlayer()
     {
-        return gameController.GetSupplier(room.RolePlayer); ;
+        return room.SupplierPlayer;
     }
 }

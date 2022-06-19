@@ -5,6 +5,7 @@ using SocketIOClient;
 
 public class Room
 {
+    private GameController gameController;
     [SerializeField] private RoomUI roomUI;
     private SupplierRole roleClient;
     private IRoomConnection roomConnection;
@@ -14,13 +15,16 @@ public class Room
     public event DelRole OnRoleAssignOk;
     public event DelRole OnRoleAssignFail;
 
-    public delegate void DelGameStarted();
+    public delegate void DelGameStarted(string message);
     public event DelGameStarted OnGameStarted;
-    public event DelGameStarted OnGameNext;
+    public delegate void DelOrderReceived(int roundCurrent, int amount, OrderType orderType);
+    public event DelOrderReceived OnOrderReceived;
 
-    public delegate void DelOrder(Order order);
-    public event DelOrder OnOrderOK;
+    public delegate void DelOrderOk(int amount, SupplierRole role, OrderType orderType);
+    public event DelOrderOk OnOrderOK;
+    public delegate void DelOrder();
     public event DelOrder OnOrderFail;
+    private SupplierRole rolePending;
 
     public void SetConnection(IRoomConnection roomConnection)
     {
@@ -34,24 +38,26 @@ public class Room
         roomConnection.OnRoleAssignOK += RoomConnection_OnRoleAssignOK;
         roomConnection.OnRoleAssignFail += RoomConnection_OnRoleAssignFail;
         roomConnection.OnGameStarted += RoomConnection_OnGameStarted;
-        roomConnection.OnGameNext += RoomConnection_OnGameNext; ;
+        roomConnection.OnOrderReceived += RoomConnection_OnOrderReceived;
         roomConnection.OnOrderOK += RoomConnection_OnOrderOK;
         roomConnection.OnOrderFail += RoomConnection_OnOrderFail;
     }
 
-    private void RoomConnection_OnGameNext()
+    private void RoomConnection_OnOrderReceived(int roundCurrent, int amount, OrderType orderType)
     {
-        OnGameNext?.Invoke();
+        SupplierPlayer.ReceiveOrder(new Order(SupplierPlayer, amount, orderType, false));
+        OnOrderReceived?.Invoke(roundCurrent, amount, orderType);
     }
 
-    private void RoomConnection_OnOrderOK(Order order)
+    private void RoomConnection_OnOrderOK(int amount, SupplierRole role, OrderType orderType)
     {
-        OnOrderOK?.Invoke(order);
+        OnOrderOK?.Invoke(amount, role, orderType);
+        Debug.Log("Invoke");
     }
 
-    private void RoomConnection_OnOrderFail(Order order)
+    private void RoomConnection_OnOrderFail()
     {
-        OnOrderFail?.Invoke(order);
+        OnOrderFail?.Invoke();
     }
 
     private void RoomConnection_OnRoleAssignOK(string message)
@@ -59,6 +65,9 @@ public class Room
         roomConnection.OnRoleAssigned -= RoomConnection_OnRoleAssigned;
         roomConnection.OnRoleAssignOK -= RoomConnection_OnRoleAssignOK;
         roomConnection.OnRoleAssignFail -= RoomConnection_OnRoleAssignFail;
+
+        roleClient = rolePending;
+        SupplierPlayer.SetAsPlayer();
 
         OnRoleAssignOk?.Invoke(message);
     }
@@ -73,19 +82,23 @@ public class Room
         OnRoleAssigned?.Invoke(message);
     }
 
-    private void RoomConnection_OnGameStarted()
+    private void RoomConnection_OnGameStarted(string message)
     {
-        OnGameStarted?.Invoke();
+        OnGameStarted?.Invoke(message);
     }
 
     public void SelectRole(SupplierRole role)
     {
+        rolePending = role;
         roomConnection.SelectRole(role);
     }
 
-    public void MakeOrder(Supplier supplier, int amount, OrderType orderType)
+    public Order MakeOrder(Supplier supplier, int amount, OrderType orderType, bool done)
     {
-        roomConnection.MakeOrder(new Order(supplier, amount, orderType));
+        Debug.Log($"Making order: to {supplier.Role}, amount {amount}, type {orderType}, done {done}");
+        Order order = new Order(supplier, amount, orderType, done);
+        roomConnection.MakeOrder(order);
+        return order;
     }
 
     public void AdvanceRound(List<Order> orders, int roundCurrent)
@@ -98,9 +111,15 @@ public class Room
         roomConnection.ForceStartGame();
     }
 
-    public SupplierRole RolePlayer { get { return roleClient; } }
+    public void SetGameController(GameController gameController)
+    {
+        this.gameController = gameController;
+    }
 
+    public SupplierRole RolePlayer { get { return roleClient; } }
+    public Supplier SupplierPlayer { get { return gameController.GetSupplier(RolePlayer); } }
     public string Id { get; set; }
     public string Name { get; set; }
     public string Uri { get; set; }
+    public GameController GameController { get { return gameController; } set { gameController = value; } }
 }

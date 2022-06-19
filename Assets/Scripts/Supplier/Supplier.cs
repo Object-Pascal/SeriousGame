@@ -18,20 +18,25 @@ public class Supplier : MonoBehaviour
     [SerializeField] private int backLog;
     [SerializeField] private Supplier supplierLeft;
     [SerializeField] private Supplier supplierRight;
-    private Room game;
+    private Room room;
 
     public void SetRoom(Room room)
     {
-        this.game = room;
+        this.room = room;
     }
 
-    public void MakeOrder(int amount, OrderType orderType)
+    public void SetAsPlayer()
+    {
+        room.OnOrderOK += Room_OnOrderOK;
+    }
+
+    public void MakeOrder(int amount, OrderType orderType, bool done)
     {
         if (orderType == OrderType.Receive)
         {
             if (supplierLeft)
             {
-                game.MakeOrder(supplierLeft, amount, OrderType.Receive);
+                room.MakeOrder(supplierLeft, amount, OrderType.Receive, done);
             }
             else
             {
@@ -42,31 +47,66 @@ public class Supplier : MonoBehaviour
         {
             if (supplierRight)
             {
-                game.MakeOrder(supplierRight, amount, OrderType.Request);
+                room.MakeOrder(supplierRight, amount, OrderType.Request, done);
             }
             else
             {
-                game.MakeOrder(this, amount, OrderType.Receive);
+                room.MakeOrder(this, amount, OrderType.Receive, done);
             }
+        }
+    }
+
+    private void Room_OnOrderOK(int amount, SupplierRole role, OrderType orderType)
+    {
+        Debug.Log("onOk at " + this.role + ": " + role.ToString() + ":" + orderType.ToString() + ":" + amount);
+
+        if (orderType == OrderType.Receive)
+        {
+            stock -= amount;
+            backLog -= amount;
         }
     }
 
     public void ReceiveOrder(Order order)
     {
-        if (order.OrderType == OrderType.Receive)
+        if (order.Amount != 0)
         {
-            stock += order.Amount;
+            if (order.OrderType == OrderType.Receive)
+            {
+                Debug.Log("added stock: " + order.Amount);
+                stock += order.Amount;
+            }
+            else
+            {
+                Debug.Log("added backlog: " + order.Amount);
+                backLog += order.Amount;
+            }
         }
-        else
+
+        HandleBacklog();
+    }
+
+    private void HandleBacklog()
+    {
+        Debug.Log("Handle backlog: stock: " + Stock + ", backlog: " + backLog);
+
+        if (backLog > 0 && stock > 0)
         {
-            backLog += order.Amount;
+            if (stock <= backLog)
+            {
+                MakeOrder(stock, OrderType.Receive, false);
+            }
+            else
+            {
+                MakeOrder(backLog, OrderType.Receive, false);
+            }
         }
     }
 
     public SupplierRole Role { get { return role; } }
-    public int Stock { get { return stock; } }
-    public int BackLog { get { return backLog; } }
-    public Room Game { get { return game; } }
+    public int Stock { get { return stock; } set { stock = value; } }
+    public int BackLog { get { return backLog; } set { backLog = value; } }
+    public Room Game { get { return room; } }
     public Supplier SupplierLeft { get { return supplierLeft; } }
     public Supplier SupplierRight { get { return supplierRight; } }
 }

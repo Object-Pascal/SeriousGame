@@ -1,9 +1,26 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SocketIOClient;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using UnityEngine;
+
+public class OrderReceiveDTO
+{
+    public int roundLength { get; set; }
+    public int order { get; set; }
+    public string type { get; set; }
+}
+
+public class OrderDTO
+{
+    public int order { get; set; }
+    public string type { get; set; }
+    public string role { get; set; }
+    public bool done { get; set; }
+}
 
 public class SocketIORoomConnection : IRoomConnection
 {
@@ -16,9 +33,9 @@ public class SocketIORoomConnection : IRoomConnection
     public event IRoomConnection.DelRoomConnect OnRoomConnectionSuccess;
     public event IRoomConnection.DelRoomConnect OnRoomConnectionFail;
     public event IRoomConnection.DelGame OnGameStarted;
-    public event IRoomConnection.DelGame OnGameNext;
+    public event IRoomConnection.DelOrderReceived OnOrderReceived;
     public event IRoomConnection.DelOrderMade OnOrderMade;
-    public event IRoomConnection.DelOrderMade OnOrderOK;
+    public event IRoomConnection.DelOrderOk OnOrderOK;
     public event IRoomConnection.DelOrderMade OnOrderFail;
 
     private Room room;
@@ -71,7 +88,7 @@ public class SocketIORoomConnection : IRoomConnection
         socket.OnUnityThread("role:assign-error", Socket_OnRoleAssignFail);
         socket.OnUnityThread("role:assigned", Socket_OnRoleAssigned);
         socket.OnUnityThread("game:started", Socket_OnGameStarted);
-        socket.OnUnityThread("game:next", Socket_OnGameNext);
+        socket.OnUnityThread("game:next", Socket_OnOrderReceived);
         socket.OnUnityThread("invoice:added", Socket_OnOrderMade);
         socket.OnUnityThread("round:invoice-ok", Socket_OnOrderOK);
         socket.OnUnityThread("round:invoice-error", Socket_OnOrderFail);
@@ -94,27 +111,56 @@ public class SocketIORoomConnection : IRoomConnection
 
     private void Socket_OnGameStarted(SocketIOResponse response)
     {
-        OnGameStarted?.Invoke();
+        OnGameStarted?.Invoke(response.ToString());
     }
 
-    private void Socket_OnGameNext(SocketIOResponse response)
+    private void Socket_OnOrderReceived(SocketIOResponse response)
     {
-        OnGameNext?.Invoke();
+        OrderReceiveDTO[] dto = JsonConvert.DeserializeObject<OrderReceiveDTO[]>(response.ToString());
+
+        int roundCurrent = dto[0].roundLength;
+        int amount = dto[0].order;
+        string orderTypeString = dto[0].type;
+
+        OrderType orderType = OrderType.Request;
+
+        if (orderTypeString == "provided")
+        {
+            orderType = OrderType.Receive;
+        }
+
+        OnOrderReceived?.Invoke(roundCurrent, amount, orderType);
     }
 
     private void Socket_OnOrderMade(SocketIOResponse response)
     {
-        OnOrderMade?.Invoke(null);
+        OnOrderMade?.Invoke();
     }
 
     private void Socket_OnOrderOK(SocketIOResponse response)
     {
-        OnOrderOK?.Invoke(null);
+        OrderDTO[] dto = JsonConvert.DeserializeObject<OrderDTO[]>(response.ToString());
+
+        int amount = dto[0].order;
+        string roleString = dto[0].role;
+        string orderTypeString = dto[0].type;
+        bool done = dto[0].done;
+
+        SupplierRole role = System.Enum.Parse<SupplierRole>(roleString);
+
+        OrderType orderType = OrderType.Request;
+
+        if (orderTypeString == "Receive")
+        {
+            orderType = OrderType.Receive;
+        }
+
+        OnOrderOK?.Invoke(amount, role, orderType);
     }
 
     private void Socket_OnOrderFail(SocketIOResponse response)
     {
-        OnOrderFail?.Invoke(null);
+        OnOrderFail?.Invoke();
     }
 
     public void MakeOrder(Order order)
@@ -124,8 +170,14 @@ public class SocketIORoomConnection : IRoomConnection
 
     private void EmitMakeOrder(Order order)
     {
-        string json = MakeJsonString(new { order = order.Amount,
-                                           type = order.OrderType.ToString() }) ;
+        string json = MakeJsonString(new 
+        { 
+            order = order.Amount,
+            type = order.OrderType.ToString(),
+            role = order.Supplier.Role.ToString(),
+            done = order.Done
+        }); 
+
         socket.EmitStringAsJSON("round:invoice", json);
     }
 

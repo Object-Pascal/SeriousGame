@@ -14,13 +14,15 @@ public interface IRoomConnection
     public event DelRoleAssign OnRoleAssignFail;
     public event DelRoleAssign OnRoleAssigned;
 
-    public delegate void DelGame();
+    public delegate void DelGame(string message);
     public event DelGame OnGameStarted;
-    public event DelGame OnGameNext;
+    public delegate void DelOrderReceived(int roundCurrent, int amount, OrderType orderType);
+    public event DelOrderReceived OnOrderReceived;
 
-    public delegate void DelOrderMade(Order order);
+    public delegate void DelOrderMade();
+    public delegate void DelOrderOk(int amount, SupplierRole role, OrderType orderType);
     public event DelOrderMade OnOrderMade;
-    public event DelOrderMade OnOrderOK;
+    public event DelOrderOk OnOrderOK;
     public event DelOrderMade OnOrderFail;
 
     public delegate void DelError(string message);

@@ -9,9 +9,7 @@ using System.Threading.Tasks;
 
 public class GameController : MonoBehaviour
 {
-    [SerializeField] private Room room;
-    [SerializeField] private RoomUI gameUI;
-    [SerializeField] private RoleSelectUIManager roleSelectionUI;
+    private Room room;
     private Supplier[] suppliers;
     private IRoomDAO roomDao;
 
@@ -22,11 +20,6 @@ public class GameController : MonoBehaviour
     {
         UnityThread.initUnityThread();
         Supplier[] suppliers = Suppliers;
-
-        for (int i = 0; i < suppliers.Length; i++)
-        {
-            suppliers[i].SetRoom(room);
-        }
 
         roomDao = new HttpRoomDAO();
     }
@@ -71,6 +64,14 @@ public class GameController : MonoBehaviour
 
             Debug.Log("Connection success to: " + room.Id);
             room.SetConnection(connection);
+            room.SetGameController(this);
+            this.room = room;
+
+            for (int i = 0; i < Suppliers.Length; i++)
+            {
+                Suppliers[i].SetRoom(room);
+            }
+
             OnRoomConnectionSuccess?.Invoke(room);
         });
     }
@@ -121,15 +122,5 @@ public class GameController : MonoBehaviour
 
             return suppliers;
         }
-    }
-
-    public void SetGameUIActive(bool isActive)
-    {
-        gameUI.gameObject.SetActive(isActive);
-    }
-
-    public void SetRoleSelectionUIActive(bool isActive)
-    {
-        roleSelectionUI.gameObject.SetActive(isActive);
     }
 }
