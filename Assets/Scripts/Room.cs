@@ -17,6 +17,8 @@ public class Room
 
     public delegate void DelGameStarted(string message);
     public event DelGameStarted OnGameStarted;
+    public delegate void DelGameEnded(GameHistoryDTO history);
+    public event DelGameEnded OnGameEnded;
     public delegate void DelOrderReceived(int roundCurrent, int amount, OrderType orderType);
     public event DelOrderReceived OnOrderReceived;
 
@@ -38,9 +40,15 @@ public class Room
         roomConnection.OnRoleAssignOK += RoomConnection_OnRoleAssignOK;
         roomConnection.OnRoleAssignFail += RoomConnection_OnRoleAssignFail;
         roomConnection.OnGameStarted += RoomConnection_OnGameStarted;
+        roomConnection.OnGameEnded += RoomConnection_OnGameEnded;
         roomConnection.OnOrderReceived += RoomConnection_OnOrderReceived;
         roomConnection.OnOrderOK += RoomConnection_OnOrderOK;
         roomConnection.OnOrderFail += RoomConnection_OnOrderFail;
+    }
+
+    private void RoomConnection_OnGameEnded(GameHistoryDTO history)
+    {
+        OnGameEnded?.Invoke(history);
     }
 
     private void RoomConnection_OnOrderReceived(int roundCurrent, int amount, OrderType orderType)
@@ -109,6 +117,11 @@ public class Room
     public void ForceStartGame()
     {
         roomConnection.ForceStartGame();
+    }
+
+    public void EndGame()
+    {
+        roomConnection.EndGame();
     }
 
     public void SetGameController(GameController gameController)

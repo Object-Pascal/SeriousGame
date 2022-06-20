@@ -34,6 +34,7 @@ public class RoomUI : MonoBehaviour
         room.OnRoleAssignOk += Room_OnRoleAssignOk;
         room.OnRoleAssignFail += Room_OnRoleAssignFail;
         room.OnGameStarted += Room_OnGameStarted;
+        room.OnGameEnded += Room_OnGameEnded;
         room.OnOrderReceived += Room_OnOrderReceived;
         room.OnOrderOK += Room_OnOrderOK;
         room.OnOrderFail += Room_OnOrderFail;
@@ -41,14 +42,43 @@ public class RoomUI : MonoBehaviour
         DisableTakenRoles();
     }
 
+    private void Room_OnGameEnded(GameHistoryDTO history)
+    {
+        Debug.Log("---OnGameEnded:---");
+
+        Debug.Log(history.message);
+
+        Debug.Log("Round count:" + history.history.Length);
+
+        for (int i = 0; i < history.history.Length; i++)
+        {
+            RoundDTO round = history.history[i];
+            Debug.Log("Round: " + i);
+
+            for (int i2 = 0; i2 < round.orders.Length; i2++)
+            {
+                OrderDTO order = round.orders[i2];
+                Debug.Log("Order: to " + order.role + ", amount " + order.order + ", type " + order.type);
+            }
+        }
+    }
+
     private void Room_OnOrderReceived(int roundCurrent, int amount, OrderType orderType)
     {
         UnityThread.executeInUpdate(() =>
         {
+            txtIncomingValue.text = "0";
             UpdateStockAndBacklogAndRoundText();
             UpdateRoundText(roundCurrent);
+
+            if (orderType == OrderType.requested)
+            {
+                txtIncomingValue.text = amount.ToString();
+            }
+
             btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
             btnSendOrder.interactable = true;
+            inputOutgoingValue.interactable = true;
         });
     }
 
@@ -58,6 +88,7 @@ public class RoomUI : MonoBehaviour
         {
             Debug.Log("RoomUI: OK");
             btnSendOrder.GetComponentInChildren<TMP_Text>().text = "SENT!";
+            inputOutgoingValue.interactable = false;
             UpdateStockAndBacklogAndRoundText();
         });
     }
@@ -73,6 +104,7 @@ public class RoomUI : MonoBehaviour
         roleSelectionObj.SetActive(false);
         waitForPlayersObj.SetActive(false);
         hudObj.SetActive(true);
+        txtRound.text = "Round: 0";
         UpdateHud();
     }
 
@@ -96,6 +128,9 @@ public class RoomUI : MonoBehaviour
         Debug.Log("Role assign ok");
         roleSelectionObj.SetActive(false);
         waitForPlayersObj.SetActive(true);
+        string roleName = room.RolePlayer.ToString();
+        roleName = char.ToUpper(roleName[0]) + roleName.Substring(1);
+        txtRole.text = roleName;
     }
 
     private void Room_OnRoleAssignFail(string message)
@@ -132,6 +167,11 @@ public class RoomUI : MonoBehaviour
     {
         SupplierRole roleSelected = Enum.Parse<SupplierRole>(role.ToLower());
         room.SelectRole(roleSelected);
+    }
+
+    public void EndGame()
+    {
+        room.EndGame();
     }
 
     private void DisableAllRoleBtns()

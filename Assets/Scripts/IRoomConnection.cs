@@ -25,6 +25,10 @@ public interface IRoomConnection
     public event DelOrderOk OnOrderOK;
     public event DelOrderMade OnOrderFail;
 
+
+    public delegate void DelGameEnded(GameHistoryDTO history);
+    public event DelGameEnded OnGameEnded;
+
     public delegate void DelError(string message);
     public event DelError OnError;
 
@@ -33,4 +37,5 @@ public interface IRoomConnection
     public void MakeOrder(Order order);
     public void DisconnectFromRoom();
     public void ForceStartGame();
+    public void EndGame();
 }

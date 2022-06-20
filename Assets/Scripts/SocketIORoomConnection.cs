@@ -14,7 +14,7 @@ public class OrderReceiveDTO
     public string type { get; set; }
 }
 
-public class OrderDTO
+public class OrderOnOkDTO
 {
     public int order { get; set; }
     public string type { get; set; }
@@ -33,6 +33,7 @@ public class SocketIORoomConnection : IRoomConnection
     public event IRoomConnection.DelRoomConnect OnRoomConnectionSuccess;
     public event IRoomConnection.DelRoomConnect OnRoomConnectionFail;
     public event IRoomConnection.DelGame OnGameStarted;
+    public event IRoomConnection.DelGameEnded OnGameEnded;
     public event IRoomConnection.DelOrderReceived OnOrderReceived;
     public event IRoomConnection.DelOrderMade OnOrderMade;
     public event IRoomConnection.DelOrderOk OnOrderOK;
@@ -89,9 +90,17 @@ public class SocketIORoomConnection : IRoomConnection
         socket.OnUnityThread("role:assigned", Socket_OnRoleAssigned);
         socket.OnUnityThread("game:started", Socket_OnGameStarted);
         socket.OnUnityThread("game:next", Socket_OnOrderReceived);
+        socket.OnUnityThread("game:end", Socket_OnGameEnded);
         socket.OnUnityThread("invoice:added", Socket_OnOrderMade);
         socket.OnUnityThread("round:invoice-ok", Socket_OnOrderOK);
         socket.OnUnityThread("round:invoice-error", Socket_OnOrderFail);
+    }
+
+    private void Socket_OnGameEnded(SocketIOResponse response)
+    {
+        GameHistoryDTO[] dtos = JsonConvert.DeserializeObject<GameHistoryDTO[]>(response.ToString());
+
+        OnGameEnded?.Invoke(dtos[0]);
     }
 
     private void Socket_OnRoleAssignOK(SocketIOResponse response)
@@ -139,7 +148,7 @@ public class SocketIORoomConnection : IRoomConnection
 
     private void Socket_OnOrderOK(SocketIOResponse response)
     {
-        OrderDTO[] dto = JsonConvert.DeserializeObject<OrderDTO[]>(response.ToString());
+        OrderOnOkDTO[] dto = JsonConvert.DeserializeObject<OrderOnOkDTO[]>(response.ToString());
 
         int amount = dto[0].order;
         string roleString = dto[0].role;
@@ -201,6 +210,12 @@ public class SocketIORoomConnection : IRoomConnection
     {
         string json = MakeJsonString(new {  });
         socket.EmitStringAsJSON("game:start", json);
+    }
+
+    public void EndGame()
+    {
+        string json = MakeJsonString(new { });
+        socket.EmitStringAsJSON("game:end", json);
     }
 
     private string MakeJsonString(object jsonObj)
