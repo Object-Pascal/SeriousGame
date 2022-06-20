@@ -122,11 +122,11 @@ public class SocketIORoomConnection : IRoomConnection
         int amount = dto[0].order;
         string orderTypeString = dto[0].type;
 
-        OrderType orderType = OrderType.Request;
+        OrderType orderType = OrderType.requested;
 
-        if (orderTypeString == "provided")
+        if (orderTypeString.ToLower() == "provided")
         {
-            orderType = OrderType.Receive;
+            orderType = OrderType.provided;
         }
 
         OnOrderReceived?.Invoke(roundCurrent, amount, orderType);
@@ -147,12 +147,11 @@ public class SocketIORoomConnection : IRoomConnection
         bool done = dto[0].done;
 
         SupplierRole role = System.Enum.Parse<SupplierRole>(roleString);
+        OrderType orderType = OrderType.requested;
 
-        OrderType orderType = OrderType.Request;
-
-        if (orderTypeString == "Receive")
+        if (orderTypeString == "provided")
         {
-            orderType = OrderType.Receive;
+            orderType = OrderType.provided;
         }
 
         OnOrderOK?.Invoke(amount, role, orderType);

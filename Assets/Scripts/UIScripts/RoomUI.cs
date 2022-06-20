@@ -125,12 +125,12 @@ public class RoomUI : MonoBehaviour
         btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Sending...";
         btnSendOrder.interactable = false;
         Supplier supplierPlayer = GetSupplierPlayer();
-        supplierPlayer.MakeOrder(int.Parse(inputOutgoingValue.text), OrderType.Request, true);
+        supplierPlayer.MakeOrder(int.Parse(inputOutgoingValue.text), OrderType.requested, true);
     }
 
     public void SelectRole(string role)
     {
-        SupplierRole roleSelected = Enum.Parse<SupplierRole>(role);
+        SupplierRole roleSelected = Enum.Parse<SupplierRole>(role.ToLower());
         room.SelectRole(roleSelected);
     }
 
@@ -147,6 +147,7 @@ public class RoomUI : MonoBehaviour
         for (int i = 0; i < btnsRoleSelect.Length; i++)
         {
             string txt = btnsRoleSelect[i].GetComponentInChildren<TextMeshProUGUI>().text;
+            txt = txt.ToLower();
 
             for (int i2 = 0; i2 < roles.Length; i2++)
             {

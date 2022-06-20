@@ -4,8 +4,8 @@ using UnityEngine;
 
 public enum OrderType
 {
-    Request,
-    Receive
+    requested,
+    provided
 }
 
 [System.Serializable]

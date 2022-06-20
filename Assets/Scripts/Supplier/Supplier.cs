@@ -4,11 +4,11 @@ using UnityEngine;
 
 public enum SupplierRole
 {
-    Customer,
-    Retailer,
-    WholeSaler,
-    Distributor,
-    Manufacturer
+    customer,
+    retailer,
+    wholesaler,
+    distributor,
+    manufacturer
 }
 
 public class Supplier : MonoBehaviour
@@ -32,11 +32,11 @@ public class Supplier : MonoBehaviour
 
     public void MakeOrder(int amount, OrderType orderType, bool done)
     {
-        if (orderType == OrderType.Receive)
+        if (orderType == OrderType.provided)
         {
             if (supplierLeft)
             {
-                room.MakeOrder(supplierLeft, amount, OrderType.Receive, done);
+                room.MakeOrder(supplierLeft, amount, OrderType.provided, done);
             }
             else
             {
@@ -47,11 +47,11 @@ public class Supplier : MonoBehaviour
         {
             if (supplierRight)
             {
-                room.MakeOrder(supplierRight, amount, OrderType.Request, done);
+                room.MakeOrder(supplierRight, amount, OrderType.requested, done);
             }
             else
             {
-                room.MakeOrder(this, amount, OrderType.Receive, done);
+                room.MakeOrder(this, amount, OrderType.provided, done);
             }
         }
     }
@@ -60,7 +60,7 @@ public class Supplier : MonoBehaviour
     {
         Debug.Log("onOk at " + this.role + ": " + role.ToString() + ":" + orderType.ToString() + ":" + amount);
 
-        if (orderType == OrderType.Receive)
+        if (orderType == OrderType.provided)
         {
             stock -= amount;
             backLog -= amount;
@@ -69,9 +69,11 @@ public class Supplier : MonoBehaviour
 
     public void ReceiveOrder(Order order)
     {
+        Debug.Log($"Receved order: to {order.Supplier.role}, amount {order.Amount}, type {order.OrderType}, done {order.Done}");
+
         if (order.Amount != 0)
         {
-            if (order.OrderType == OrderType.Receive)
+            if (order.OrderType == OrderType.provided)
             {
                 Debug.Log("added stock: " + order.Amount);
                 stock += order.Amount;
@@ -94,11 +96,11 @@ public class Supplier : MonoBehaviour
         {
             if (stock <= backLog)
             {
-                MakeOrder(stock, OrderType.Receive, false);
+                MakeOrder(stock, OrderType.provided, false);
             }
             else
             {
-                MakeOrder(backLog, OrderType.Receive, false);
+                MakeOrder(backLog, OrderType.provided, false);
             }
         }
     }
