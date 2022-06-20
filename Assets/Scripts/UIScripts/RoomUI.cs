@@ -65,7 +65,7 @@ public class RoomUI : MonoBehaviour
 
     private void Room_OnOrderReceived(int roundCurrent, int amount, OrderType orderType)
     {
-        UnityThread.executeInUpdate(() =>
+        UnityThread.executeInLateUpdate(() =>
         {
             RoomOnOrderReceived(roundCurrent, amount, orderType);
         });
@@ -82,14 +82,16 @@ public class RoomUI : MonoBehaviour
             txtIncomingValue.text = amount.ToString();
         }
 
-        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
-        btnSendOrder.interactable = true;
-        inputOutgoingValue.interactable = true;
+        //btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
+        //btnSendOrder.interactable = true;
+
+        inputOutgoingValue.text = "0";
+        //inputOutgoingValue.interactable = true;
     }
 
     private void Room_OnOrderOK(int amount, SupplierRole role, OrderType orderType)
     {
-        UnityThread.executeInUpdate(() =>
+        UnityThread.executeInLateUpdate(() =>
         {
             RoomOnOrderOk(amount, role, orderType);
         });
@@ -98,15 +100,15 @@ public class RoomUI : MonoBehaviour
     private void RoomOnOrderOk(int amount, SupplierRole role, OrderType orderType)
     {
         Debug.Log("RoomUI: OK");
-        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "SENT!";
-        inputOutgoingValue.interactable = false;
+        //btnSendOrder.GetComponentInChildren<TMP_Text>().text = "SENT!";
+        //inputOutgoingValue.interactable = false;
         UpdateStockAndBacklogAndRoundText();
     }
 
     private void Room_OnOrderFail()
     {
-        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
-        btnSendOrder.interactable = true;
+        //btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
+        //btnSendOrder.interactable = true;
     }
 
     private void Room_OnGameStarted(string message)
@@ -168,8 +170,8 @@ public class RoomUI : MonoBehaviour
 
     public void MakePlayerOrder()
     {
-        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Sending...";
-        btnSendOrder.interactable = false;
+        //btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Sending...";
+        //btnSendOrder.interactable = false;
         Supplier supplierPlayer = GetSupplierPlayer();
         supplierPlayer.MakeOrder(int.Parse(inputOutgoingValue.text), OrderType.requested, true);
     }

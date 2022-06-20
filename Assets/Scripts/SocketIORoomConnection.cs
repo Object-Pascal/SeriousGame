@@ -58,7 +58,7 @@ public class SocketIORoomConnection : IRoomConnection
             EIO = 4
             ,
             Transport = SocketIOClient.Transport.TransportProtocol.WebSocket
-        });
+        }, SocketIOUnity.UnityThreadScope.LateUpdate);
 
         socket.OnError += Socket_OnError;
         socket.OnConnected += Socket_OnConnected;
