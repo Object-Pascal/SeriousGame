@@ -67,30 +67,40 @@ public class RoomUI : MonoBehaviour
     {
         UnityThread.executeInUpdate(() =>
         {
-            txtIncomingValue.text = "0";
-            UpdateStockAndBacklogAndRoundText();
-            UpdateRoundText(roundCurrent);
-
-            if (orderType == OrderType.requested)
-            {
-                txtIncomingValue.text = amount.ToString();
-            }
-
-            btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
-            btnSendOrder.interactable = true;
-            inputOutgoingValue.interactable = true;
+            RoomOnOrderReceived(roundCurrent, amount, orderType);
         });
+    }
+
+    private void RoomOnOrderReceived(int roundCurrent, int amount, OrderType orderType)
+    {
+        txtIncomingValue.text = "0";
+        UpdateStockAndBacklogAndRoundText();
+        UpdateRoundText(roundCurrent);
+
+        if (orderType == OrderType.requested)
+        {
+            txtIncomingValue.text = amount.ToString();
+        }
+
+        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
+        btnSendOrder.interactable = true;
+        inputOutgoingValue.interactable = true;
     }
 
     private void Room_OnOrderOK(int amount, SupplierRole role, OrderType orderType)
     {
         UnityThread.executeInUpdate(() =>
         {
-            Debug.Log("RoomUI: OK");
-            btnSendOrder.GetComponentInChildren<TMP_Text>().text = "SENT!";
-            inputOutgoingValue.interactable = false;
-            UpdateStockAndBacklogAndRoundText();
+            RoomOnOrderOk(amount, role, orderType);
         });
+    }
+
+    private void RoomOnOrderOk(int amount, SupplierRole role, OrderType orderType)
+    {
+        Debug.Log("RoomUI: OK");
+        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "SENT!";
+        inputOutgoingValue.interactable = false;
+        UpdateStockAndBacklogAndRoundText();
     }
 
     private void Room_OnOrderFail()
@@ -104,7 +114,8 @@ public class RoomUI : MonoBehaviour
         roleSelectionObj.SetActive(false);
         waitForPlayersObj.SetActive(false);
         hudObj.SetActive(true);
-        txtRound.text = "Round: 0";
+        txtRound.text = "Round: 1";
+        txtIncomingValue.text = "-";
         UpdateHud();
     }
 
