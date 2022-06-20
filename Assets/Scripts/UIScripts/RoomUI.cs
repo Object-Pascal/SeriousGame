@@ -83,7 +83,7 @@ public class RoomUI : MonoBehaviour
         }
 
         //btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
-        //btnSendOrder.interactable = true;
+        btnSendOrder.interactable = true;
 
         inputOutgoingValue.text = "0";
         //inputOutgoingValue.interactable = true;
@@ -171,7 +171,7 @@ public class RoomUI : MonoBehaviour
     public void MakePlayerOrder()
     {
         //btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Sending...";
-        //btnSendOrder.interactable = false;
+        btnSendOrder.interactable = false;
         Supplier supplierPlayer = GetSupplierPlayer();
         supplierPlayer.MakeOrder(int.Parse(inputOutgoingValue.text), OrderType.requested, true);
     }
