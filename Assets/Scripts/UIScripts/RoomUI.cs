@@ -78,7 +78,7 @@ public class RoomUI : MonoBehaviour
                 txtIncomingValue.text = amount.ToString();
             }
 
-            btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
+            btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Stuur";
             btnSendOrder.interactable = true;
 
             inputOutgoingValue.text = "0";
@@ -110,7 +110,7 @@ public class RoomUI : MonoBehaviour
         {
             if (done)
             {
-                btnSendOrder.GetComponentInChildren<TMP_Text>().text = "SENT!";
+                btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Verstuurd";
                 inputOutgoingValue.interactable = false;
                 UpdateStockAndBacklogAndRoundText();
             }
@@ -119,7 +119,7 @@ public class RoomUI : MonoBehaviour
 
     private void Room_OnOrderFail()
     {
-        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Send";
+        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Stuur";
         btnSendOrder.interactable = true;
     }
 
@@ -128,7 +128,7 @@ public class RoomUI : MonoBehaviour
         roleSelectionObj.SetActive(false);
         waitForPlayersObj.SetActive(false);
         hudObj.SetActive(true);
-        txtRound.text = "Round: 1";
+        txtRound.text = "Ronde: 1";
         txtIncomingValue.text = "-";
         UpdateHud();
     }
@@ -180,12 +180,12 @@ public class RoomUI : MonoBehaviour
 
     private void UpdateRoundText(int round)
     {
-        txtRound.text = "Round: " + round;
+        txtRound.text = "Ronde: " + round;
     }
 
     public void MakePlayerOrder()
     {
-        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Sending...";
+        btnSendOrder.GetComponentInChildren<TMP_Text>().text = "Sturen...";
         btnSendOrder.interactable = false;
         Supplier supplierPlayer = GetSupplierPlayer();
         supplierPlayer.MakeOrder(int.Parse(inputOutgoingValue.text), OrderType.requested, true);

@@ -30,7 +30,7 @@ public class ChatMessage : MonoBehaviour
 
         switch (sentiment)
         {
-            case "Postive":
+            case "Positive":
                 txtSentiment.color = Color.green;
                 break;
             case "Negative":

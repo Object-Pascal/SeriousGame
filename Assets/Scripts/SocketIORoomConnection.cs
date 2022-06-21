@@ -129,7 +129,7 @@ public class SocketIORoomConnection : IRoomConnection
         switch (sentiment)
         {
             case "pos":
-                sentiment = "Postive";
+                sentiment = "Positive";
                 break;
             case "neg":
                 sentiment = "Negative";
@@ -286,7 +286,7 @@ public class SocketIORoomConnection : IRoomConnection
         switch (sentiment)
         {
             case "pos":
-                sentiment = "Postive";
+                sentiment = "Positive";
                 break;
             case "neg":
                 sentiment = "Negative";
