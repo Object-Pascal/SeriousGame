@@ -14,17 +14,20 @@ public interface IRoomConnection
     public event DelRoleAssign OnRoleAssignFail;
     public event DelRoleAssign OnRoleAssigned;
 
-    public delegate void DelGame(string message);
-    public event DelGame OnGameStarted;
+    public delegate void DelGameStarted(bool isChatEnabled);
+    public event DelGameStarted OnGameStarted;
     public delegate void DelOrderReceived(int roundCurrent, int amount, OrderType orderType);
     public event DelOrderReceived OnOrderReceived;
 
     public delegate void DelOrderMade();
-    public delegate void DelOrderOk(int amount, SupplierRole role, OrderType orderType);
+    public delegate void DelOrderOk(int amount, SupplierRole role, OrderType orderType, bool done);
     public event DelOrderMade OnOrderMade;
     public event DelOrderOk OnOrderOK;
     public event DelOrderMade OnOrderFail;
 
+    public delegate void DelMessageReceived(string message, string sender, string sentiment);
+    public event DelMessageReceived OnMessageReceived;
+    public event DelMessageReceived OnMessageSent;
 
     public delegate void DelGameEnded(GameHistoryDTO history);
     public event DelGameEnded OnGameEnded;
@@ -35,7 +38,8 @@ public interface IRoomConnection
     public void ConnectToRoom(Room room);
     public void SelectRole(SupplierRole role);
     public void MakeOrder(Order order);
+    public void SendChatMessage(string message, SupplierRole role);
     public void DisconnectFromRoom();
-    public void ForceStartGame();
+    public void ForceStartGame(bool isChatEnabled);
     public void EndGame();
 }

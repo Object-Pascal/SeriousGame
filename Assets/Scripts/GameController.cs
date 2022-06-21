@@ -71,8 +71,10 @@ public class GameController : MonoBehaviour
             {
                 Suppliers[i].SetRoom(room);
             }
+            Debug.Log("boop");
 
             OnRoomConnectionSuccess?.Invoke(room);
+            Debug.Log("boop2");
         });
     }
 

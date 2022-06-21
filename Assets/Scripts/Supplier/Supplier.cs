@@ -56,10 +56,8 @@ public class Supplier : MonoBehaviour
         }
     }
 
-    private void Room_OnOrderOK(int amount, SupplierRole role, OrderType orderType)
+    private void Room_OnOrderOK(int amount, SupplierRole role, OrderType orderType, bool done)
     {
-        Debug.Log("onOk at " + this.role + ": " + role.ToString() + ":" + orderType.ToString() + ":" + amount);
-
         if (orderType == OrderType.provided)
         {
             stock -= amount;

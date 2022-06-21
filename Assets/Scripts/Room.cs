@@ -15,14 +15,18 @@ public class Room
     public event DelRole OnRoleAssignOk;
     public event DelRole OnRoleAssignFail;
 
-    public delegate void DelGameStarted(string message);
+    public delegate void DelGameStarted(bool isChatEnabled);
     public event DelGameStarted OnGameStarted;
     public delegate void DelGameEnded(GameHistoryDTO history);
     public event DelGameEnded OnGameEnded;
     public delegate void DelOrderReceived(int roundCurrent, int amount, OrderType orderType);
     public event DelOrderReceived OnOrderReceived;
 
-    public delegate void DelOrderOk(int amount, SupplierRole role, OrderType orderType);
+    public delegate void DelMessageReceived(string message, string sender, string sentiment);
+    public event DelMessageReceived OnMessageReceived;
+    public event DelMessageReceived OnMessageSent;
+
+    public delegate void DelOrderOk(int amount, SupplierRole role, OrderType orderType, bool done);
     public event DelOrderOk OnOrderOK;
     public delegate void DelOrder();
     public event DelOrder OnOrderFail;
@@ -44,6 +48,18 @@ public class Room
         roomConnection.OnOrderReceived += RoomConnection_OnOrderReceived;
         roomConnection.OnOrderOK += RoomConnection_OnOrderOK;
         roomConnection.OnOrderFail += RoomConnection_OnOrderFail;
+        roomConnection.OnMessageReceived += RoomConnection_OnMessageReceived;
+        roomConnection.OnMessageSent += RoomConnection_OnMessageSent;
+    }
+
+    private void RoomConnection_OnMessageSent(string message, string sender, string sentiment)
+    {
+        OnMessageSent?.Invoke(message, sender, sentiment);
+    }
+
+    private void RoomConnection_OnMessageReceived(string message, string sender, string sentiment)
+    {
+        OnMessageReceived?.Invoke(message, sender, sentiment);
     }
 
     private void RoomConnection_OnGameEnded(GameHistoryDTO history)
@@ -57,10 +73,9 @@ public class Room
         OnOrderReceived?.Invoke(roundCurrent, amount, orderType);
     }
 
-    private void RoomConnection_OnOrderOK(int amount, SupplierRole role, OrderType orderType)
+    private void RoomConnection_OnOrderOK(int amount, SupplierRole role, OrderType orderType, bool done)
     {
-        OnOrderOK?.Invoke(amount, role, orderType);
-        Debug.Log("Invoke");
+        OnOrderOK?.Invoke(amount, role, orderType, done);
     }
 
     private void RoomConnection_OnOrderFail()
@@ -90,9 +105,9 @@ public class Room
         OnRoleAssigned?.Invoke(message);
     }
 
-    private void RoomConnection_OnGameStarted(string message)
+    private void RoomConnection_OnGameStarted(bool isChatEnabled)
     {
-        OnGameStarted?.Invoke(message);
+        OnGameStarted?.Invoke(isChatEnabled);
     }
 
     public void SelectRole(SupplierRole role)
@@ -114,9 +129,14 @@ public class Room
         
     }
 
-    public void ForceStartGame()
+    public void SendChatMessage(string message, SupplierRole roleSender)
     {
-        roomConnection.ForceStartGame();
+        roomConnection.SendChatMessage(message, roleSender);
+    }
+
+    public void ForceStartGame(bool isChatEnabled)
+    {
+        roomConnection.ForceStartGame(isChatEnabled);
     }
 
     public void EndGame()

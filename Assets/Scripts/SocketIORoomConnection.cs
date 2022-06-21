@@ -16,10 +16,35 @@ public class OrderReceiveDTO
 
 public class OrderOnOkDTO
 {
+    public bool ok { get; set; }
     public int order { get; set; }
     public string type { get; set; }
     public string role { get; set; }
     public bool done { get; set; }
+}
+
+public class ChatMessageDTO
+{
+    public bool ok { get; set; }
+    public string message { get; set; }
+    public string from { get; set; }
+    public SentimentDTO sentiment { get; set; }
+}
+
+public class SentimentDTO
+{
+    public string label { get; set; }
+}
+
+public class RoleAssignCallbackDTO
+{
+    public bool ok { get; set; }
+    public string message { get; set; }
+}
+
+public class GameStartedDTO
+{
+    public bool chat { get; set; }
 }
 
 public class SocketIORoomConnection : IRoomConnection
@@ -32,12 +57,14 @@ public class SocketIORoomConnection : IRoomConnection
     public event IRoomConnection.DelRoleAssign OnRoleAssigned;
     public event IRoomConnection.DelRoomConnect OnRoomConnectionSuccess;
     public event IRoomConnection.DelRoomConnect OnRoomConnectionFail;
-    public event IRoomConnection.DelGame OnGameStarted;
+    public event IRoomConnection.DelGameStarted OnGameStarted;
     public event IRoomConnection.DelGameEnded OnGameEnded;
     public event IRoomConnection.DelOrderReceived OnOrderReceived;
     public event IRoomConnection.DelOrderMade OnOrderMade;
     public event IRoomConnection.DelOrderOk OnOrderOK;
     public event IRoomConnection.DelOrderMade OnOrderFail;
+    public event IRoomConnection.DelMessageReceived OnMessageReceived;
+    public event IRoomConnection.DelMessageReceived OnMessageSent;
 
     private Room room;
 
@@ -85,15 +112,38 @@ public class SocketIORoomConnection : IRoomConnection
 
     private void SubscribeToEvents()
     {
-        socket.OnUnityThread("role:assign-ok", Socket_OnRoleAssignOK);
-        socket.OnUnityThread("role:assign-error", Socket_OnRoleAssignFail);
         socket.OnUnityThread("role:assigned", Socket_OnRoleAssigned);
         socket.OnUnityThread("game:started", Socket_OnGameStarted);
         socket.OnUnityThread("game:next", Socket_OnOrderReceived);
         socket.OnUnityThread("game:end", Socket_OnGameEnded);
         socket.OnUnityThread("invoice:added", Socket_OnOrderMade);
-        socket.OnUnityThread("round:invoice-ok", Socket_OnOrderOK);
-        socket.OnUnityThread("round:invoice-error", Socket_OnOrderFail);
+        socket.OnUnityThread("round:message-receive", Socket_OnMessageReceive);
+    }
+
+    private void Socket_OnMessageReceive(SocketIOResponse response)
+    {
+        ChatMessageDTO[] dto = JsonConvert.DeserializeObject<ChatMessageDTO[]>(response.ToString());
+
+        string sentiment = dto[0].sentiment.label;
+
+        switch (sentiment)
+        {
+            case "pos":
+                sentiment = "Postive";
+                break;
+            case "neg":
+                sentiment = "Negative";
+                break;
+            case "neutral":
+                sentiment = "Neutral";
+                break;
+            default:
+                break;
+        }
+
+        string sender = dto[0].from;
+        sender = char.ToUpper(sender[0]) + sender.Substring(1);
+        OnMessageReceived?.Invoke(dto[0].message, sender, sentiment);
     }
 
     private void Socket_OnGameEnded(SocketIOResponse response)
@@ -103,14 +153,18 @@ public class SocketIORoomConnection : IRoomConnection
         OnGameEnded?.Invoke(dtos[0]);
     }
 
-    private void Socket_OnRoleAssignOK(SocketIOResponse response)
+    private void Socket_OnRoleAssignCallback(SocketIOResponse response)
     {
-        OnRoleAssignOK?.Invoke(response.ToString());
-    }
+        RoleAssignCallbackDTO[] dto = JsonConvert.DeserializeObject<RoleAssignCallbackDTO[]>(response.ToString());
 
-    private void Socket_OnRoleAssignFail(SocketIOResponse response)
-    {
-        OnRoleAssignFail?.Invoke(response.ToString());
+        if (dto[0].ok == true)
+        {
+            OnRoleAssignOK?.Invoke(response.ToString());
+        }
+        else
+        {
+            OnRoleAssignFail?.Invoke(response.ToString());
+        }
     }
 
     private void Socket_OnRoleAssigned(SocketIOResponse response)
@@ -120,7 +174,9 @@ public class SocketIORoomConnection : IRoomConnection
 
     private void Socket_OnGameStarted(SocketIOResponse response)
     {
-        OnGameStarted?.Invoke(response.ToString());
+        GameStartedDTO[] dto = JsonConvert.DeserializeObject<GameStartedDTO[]>(response.ToString());
+
+        OnGameStarted?.Invoke(dto[0].chat);
     }
 
     private void Socket_OnOrderReceived(SocketIOResponse response)
@@ -146,9 +202,15 @@ public class SocketIORoomConnection : IRoomConnection
         OnOrderMade?.Invoke();
     }
 
-    private void Socket_OnOrderOK(SocketIOResponse response)
+    private void Socket_OnOrderCallback(SocketIOResponse response)
     {
         OrderOnOkDTO[] dto = JsonConvert.DeserializeObject<OrderOnOkDTO[]>(response.ToString());
+
+        if (!dto[0].ok)
+        {
+            OnOrderFail?.Invoke();
+            return;
+        }
 
         int amount = dto[0].order;
         string roleString = dto[0].role;
@@ -163,12 +225,7 @@ public class SocketIORoomConnection : IRoomConnection
             orderType = OrderType.provided;
         }
 
-        OnOrderOK?.Invoke(amount, role, orderType);
-    }
-
-    private void Socket_OnOrderFail(SocketIOResponse response)
-    {
-        OnOrderFail?.Invoke();
+        OnOrderOK?.Invoke(amount, role, orderType, done);
     }
 
     public void MakeOrder(Order order)
@@ -176,17 +233,16 @@ public class SocketIORoomConnection : IRoomConnection
         EmitMakeOrder(order);
     }
 
-    private void EmitMakeOrder(Order order)
+    private async void EmitMakeOrder(Order order)
     {
-        string json = MakeJsonString(new 
-        { 
+        await socket.EmitAsync("round:invoice", Socket_OnOrderCallback, new[] { new
+        {
             order = order.Amount,
             type = order.OrderType.ToString(),
             role = order.Supplier.Role.ToString(),
             done = order.Done
-        }); 
-
-        socket.EmitStringAsJSON("round:invoice", json);
+        }
+        });
     }
 
     public void SelectRole(SupplierRole role)
@@ -194,10 +250,9 @@ public class SocketIORoomConnection : IRoomConnection
         EmitSelectRole(role);
     }
 
-    private void EmitSelectRole(SupplierRole role)
+    private async void EmitSelectRole(SupplierRole role)
     {
-        string json = MakeJsonString(new { role = role.ToString().ToLower() });
-        socket.EmitStringAsJSON("role:assign", json);
+        await socket.EmitAsync("role:assign", Socket_OnRoleAssignCallback, new[] { new { role = role.ToString().ToLower() } });
     }
 
     public void DisconnectFromRoom()
@@ -206,10 +261,44 @@ public class SocketIORoomConnection : IRoomConnection
         //socket.EmitStringAsJSON("role:assign", json);
     }
 
-    public void ForceStartGame()
+    public void ForceStartGame(bool isChatEnabled)
     {
-        string json = MakeJsonString(new {  });
+        string json = MakeJsonString(new { chat = isChatEnabled });
         socket.EmitStringAsJSON("game:start", json);
+    }
+
+    public void SendChatMessage(string message, SupplierRole roleSender)
+    {
+        EmitChatMessage(message, roleSender);
+    }
+
+    private async void EmitChatMessage(string message, SupplierRole roleSender)
+    {
+        await socket.EmitAsync("round:message", Socket_OnSendChatMessageCallback, new[] { new { lang = "dutch",
+                                                                                                message = message} });
+    }
+
+    private void Socket_OnSendChatMessageCallback(SocketIOResponse response)
+    {
+        ChatMessageDTO[] dto = JsonConvert.DeserializeObject<ChatMessageDTO[]>(response.ToString());
+        string sentiment = dto[0].sentiment.label;
+
+        switch (sentiment)
+        {
+            case "pos":
+                sentiment = "Postive";
+                break;
+            case "neg":
+                sentiment = "Negative";
+                break;
+            case "neutral":
+                sentiment = "Neutral";
+                break;
+            default:
+                break;
+        }
+
+        OnMessageSent?.Invoke(dto[0].message, "You", sentiment);
     }
 
     public void EndGame()
